@@ -78,3 +78,41 @@ export const getHabitwithStreakById = async (req, res) => {
     }
 }
 
+export const lostStreak = async (req, res) => {
+    try{
+        const {id} = req.params;
+        const habit = await Habit.findById(id);
+        if(!habit){
+            return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
+        }
+
+        const now = new Date();
+        const currentStreakMs =  now - habit.startdatestreak;
+        
+        if(currentStreakMs > habit.beststreak){
+            habit.beststreak = currentStreakMs;
+        }
+
+        habit.startdatestreak = now;
+        habit.lastLossdate = now;
+
+        await habit.save();
+        res.status(200).json({ habit, message: "Reset streak successfully" });
+    }catch (error) {
+        res.status(500).json({ message: error.message, error: "Error updating habit streak" });
+    }
+};
+
+export const deleteHabit = async (res, req) => {
+    try{
+        const {id} = req.params;
+        const habit = await Habit.findByIdAndDelete(id);
+        if(!habit){
+            return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
+        }
+        res.status(200).json({ message: "Habit deleted successfully" });
+    }catch (error) {
+        res.status(500).json({ message: error.message, error: "Error deleting habit" });
+    }
+}
+
