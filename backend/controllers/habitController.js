@@ -50,4 +50,31 @@ export const getHabitsWithStreak = async (req, res) => {
     }catch (error) {
         res.status(500).json({ message: error.message, error: "Error retrieving habits" });
     }
+    
 };
+
+export const getHabitwithStreakById = async (req, res) => {
+    try{
+        const {id} = req.params;
+        const habit = await Habit.findById(id);
+        if(!habit){
+            return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
+        }
+
+        const now = new Date();
+        const StreakMs =  now - habit.startdatestreak;
+        const days = Math.floor(StreakMs / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((StreakMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((StreakMs % (1000 * 60 * 60)) / (1000 * 60));
+
+        return res.status(200).json({ habit: {...habit._doc,
+            currentStreak: {
+                days, 
+                hours,
+                minutes
+        }}, message: "Habit retrieved successfully" });
+    }catch (error) {
+        res.status(500).json({ message: error.message, error: "Error retrieving habit" });
+    }
+}
+
