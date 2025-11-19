@@ -78,6 +78,30 @@ export const getHabitwithStreakById = async (req, res) => {
     }
 }
 
+export const getBestStreak = async (req, res) => {
+    try{
+        const {id} = req.params;
+        const habit = await Habit.findById(id);
+        if(!habit){
+            return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
+        }
+
+        const bestStreakMs = habit.beststreak;
+        const days = Math.floor(bestStreakMs / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((bestStreakMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((bestStreakMs % (1000 * 60 * 60)) / (1000 * 60));
+
+        return res.status(200).json({ bestStreak: {
+            days,
+            hours,
+            minutes
+        }});
+    }catch (error) {
+        res.status(500).json({ message: error.message, error: "Error retrieving best streak" });
+    }
+}
+
+
 export const lostStreak = async (req, res) => {
     try{
         const {id} = req.params;
@@ -103,7 +127,7 @@ export const lostStreak = async (req, res) => {
     }
 };
 
-export const deleteHabit = async (res, req) => {
+export const deleteHabit = async (req, res) => {
     try{
         const {id} = req.params;
         const habit = await Habit.findByIdAndDelete(id);
@@ -115,4 +139,5 @@ export const deleteHabit = async (res, req) => {
         res.status(500).json({ message: error.message, error: "Error deleting habit" });
     }
 }
+
 
