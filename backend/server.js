@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import habitRoutes from './routes/habitRoutes.js';
+import userRouter from "./routes/userRoutes.js";
 
 dotenv.config();//cargar variables de entorno desde el archivo .env
 
@@ -21,6 +22,7 @@ app.use(cors({
 app.use(express.json());//para parsear el body de las solicitudes como json
 
 app.use('/api/habits', habitRoutes);//definimos la ruta base para las rutas de habitos
+app.use("/api/user", userRouter);
 
 const PORT = process.env.PORT || 5000;//puerto del servidor
 
