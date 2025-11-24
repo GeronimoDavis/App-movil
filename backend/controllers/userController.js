@@ -1,5 +1,7 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken"
+import dotenv from "dotenv"
 
 export const userRegister = async (req, res) => {
     //para validar el email
@@ -41,7 +43,43 @@ export const userRegister = async (req, res) => {
             }})
 
     }catch(error){
-        res.status(500).json({message: "Server error", error: error.message})
+        res.status(500).json({message: "Server error", error: error.message});
     }
 }
 
+export const userLogin = async (req, res) =>{
+    try{
+        const {email, password} = req.body;
+
+        const existUser = await User.findOne({email});
+        if(!existUser){
+            return res.status(401).json({message:"Incorrect credentials"});
+        }
+
+        //comparo la clave con la de la bases de datos
+        const validatePassword = await bcrypt.compare(password, existUser.password);
+        if(!validatePassword){
+            return res.status(401).json({message:"Incorrect credentials"});
+        }
+
+        const payload = {
+            id: existUser._id,
+            email: existUser.email
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN || "1d"});
+
+        return res.status(200).json({message: "Login successful", 
+            token, 
+            user: {
+                id: existUser._id,
+                userName: existUser.userName,
+                email: existUser.email
+            }
+        });
+
+
+    }catch(error){
+        res.status(500).json({message: "Server error", error: error.message});
+    }
+}
