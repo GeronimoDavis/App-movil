@@ -3,9 +3,9 @@ import User from "../models/user.js";
 
 export const authMiddleware = async (req, res, next) => {
     try{
-        const authHeader = req.headers.authotization || req.headers.Authotization;// extraemos del header el token
+        const authHeader = req.headers.authorization// extraemos del header el token
 
-        if(!authHeader ||!authHeader.starts("Bearer ")){// si no existe y no comienza con Bearer tiramos error
+        if(!authHeader ||!authHeader.startsWith("Bearer ")){// si no existe y no comienza con Bearer tiramos error
             return res.status(401).json({ message: 'No token provided' });
         }
 
@@ -20,7 +20,7 @@ export const authMiddleware = async (req, res, next) => {
             return res.status(401).json({ message: 'Invalid token: user not found' });
         }
 
-        req.user = user;
+        req.user = user;//guardamos el usuario dentro del req
 
         next();
     }catch(error){

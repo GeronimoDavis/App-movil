@@ -10,6 +10,7 @@ dotenv.config();//cargar variables de entorno desde el archivo .env
 
 
 const app = express();//instancia de express
+app.use(express.json());//para parsear el body de las solicitudes como json
 
 app.use(cors({
     origin: "http://localhost:5173",//frontend permitido
@@ -19,7 +20,6 @@ app.use(cors({
     optionsSuccessStatus: 200
 }));//habilitar cors para permitir solicitudes desde otros dominios
 
-app.use(express.json());//para parsear el body de las solicitudes como json
 
 app.use('/api/habits', habitRoutes);//definimos la ruta base para las rutas de habitos
 app.use("/api/user", userRouter);
