@@ -19,7 +19,10 @@ const userSchema = new mongoose.Schema(
         createdAt:{
             type: Date,
             default: Date.now,
-        }
+        },
+        refreshToken:{type: String, default: null}
+    }, {
+        timestamps: true //esto para tener un registro de cuando se creeo y se actualizo el documento
     }
 )
 

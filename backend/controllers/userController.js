@@ -66,11 +66,22 @@ export const userLogin = async (req, res) =>{
             id: existUser._id,
             email: existUser.email
         };
+        //creamos el accessToken 
+        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN || "1h"});
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN || "1d"});
+        //creamos el refeshToken
+        const refreshToken = jwt.sign(payload, 
+            process.env.JWT_REFRESH_SECRET,
+            {expiresIn: "1d"}
+        );
+
+        // Guardamos el refresh en la BD
+        existUser.refreshToken = refreshToken;
+        await existUser.save();
 
         return res.status(200).json({message: "Login successful", 
-            token, 
+            accessToken,
+            refreshToken, 
             user: {
                 id: existUser._id,
                 userName: existUser.userName,
@@ -81,5 +92,34 @@ export const userLogin = async (req, res) =>{
 
     }catch(error){
         res.status(500).json({message: "Server error", error: error.message});
+    }
+}
+
+export const refreshToken = async (req, res) =>{
+    try{
+        const {refreshToken} = req.body;
+        if(!refreshToken){
+            return res.status(401).json({ message: "Refresh token required" })
+        }
+
+        //con esto nos aseguramos que pertenece a un usuario y que no fue borrado por logout
+        const user = await User.findOne({refreshToken});
+
+        //y si no existe usuario con ese refreshToken tiramos error:
+        if(!user){
+            return res.status(403).json({ message: "Invalid refresh token" });
+        }
+
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+        const newAccessToken = jwt.sign(
+            payload,
+            process.env.JWT_REFRESH_SECRET,
+            {expiresIn: "1h"}
+        );
+        
+        return res.status(200).json({accessToken: newAccessToken})
+    }catch{
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 }
