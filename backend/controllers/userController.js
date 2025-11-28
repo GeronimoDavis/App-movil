@@ -1,6 +1,7 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
+import blackListedToken from "../models/blackListedToken.js";
 
 
 export const userRegister = async (req, res) => {
@@ -124,3 +125,54 @@ export const refreshToken = async (req, res) =>{
     }
 }
 
+export const logout = async (req, res) =>{
+    try{
+        //sacar token del header (si existe)
+        const authHeader = req.headers.authorization
+
+        //si no existe el token no falla el sistema sino que le invalidamos el refreshToken y al no tener accessToken se obliga a logearse
+        const token = authHeader && authHeader.startsWhith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : null;
+
+       let expiresAt = null;
+
+       if(token){
+            const decodedUnsafe = jwt.decode(token); //si el nos devuelve el payload, o null si el token está mal formado.
+
+            if(decodedUnsafe && decodedUnsafe.exp){//validamos que no sea null y que tenga el campo exp el token
+                expiresAt = new Date(decodedUnsafe.exp * 1000)//multiplicamos por 1000 porque el exp viene en segundos y js trabaja con milisegundos 
+            }else{
+                expiresAt = new Date(Date.now() + 60 * 60 * 1000);//si no obtenemos el tiempo en el que expira le damos una hora 
+            }
+
+            try{
+                await blackListedToken.updateOne(// usamos el update para que se actualice el token en la lista negra o se cree en caso de que no exista y no usamos create para evitar errores
+                    {token},//usamos esto de referencia para buscar el token que coincida con este
+                    {$set: {token, expiresAt}},//si lo encuentra actualiza los campos
+                    {upsert: true}//esto dice que si no encuentra el token lo cree
+                )
+
+            }catch(error){
+                console.error("Error al guardar token en blacklist:", err);//registramos el error para no darle un mendaje de no se pudo cerrar sesion
+            }
+        }
+
+        //invalidamos el refreshToken
+        const {refreshToken} = req.body;
+        if(refreshToken){
+            const user = await User.findOne({refreshToken});
+            if(user){
+                user.refreshToken = null;
+                await user.save();
+            }
+        }
+
+        return res.status(200).json({ message: "Logout successful" });
+
+    }catch(error){
+        console.error("Logout error:", error);
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+    
+}
