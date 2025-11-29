@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
+import blackListedToken from "../models/blackListedToken.js";
 
 export const authMiddleware = async (req, res, next) => {
     try{
@@ -11,7 +12,15 @@ export const authMiddleware = async (req, res, next) => {
 
         const token = authHeader.split(' ')[1];//convertimos el token a un array para separarlo del bearer
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET); // verificamos con verify que el token es autentico y que no este vencido usando la clave guardada en el .env
+        //verificamos que el token no este en la blacklist
+
+        const black = await blackListedToken.findOne({token});
+        if(black){
+            return res.status(401).json({message: "Token revoked"})
+        }
+
+        // verificamos con verify que el token es autentico y que no este vencido usando la clave guardada en el .env
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); 
         //nos devuelve el payload en decoded con el id y email
 
         const user = await User.findById(decoded.id).select("-password");
@@ -20,7 +29,7 @@ export const authMiddleware = async (req, res, next) => {
             return res.status(401).json({ message: 'Invalid token: user not found' });
         }
 
-        req.user = user;//guardamos el usuario dentro del req
+        req.user = user;//anexamos el usuario dentro del req
 
         next();
     }catch(error){
