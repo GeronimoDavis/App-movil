@@ -68,7 +68,7 @@ export const userLogin = async (req, res) =>{
             email: existUser.email
         };
         //creamos el accessToken 
-        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "30s"});
+        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN || "1h"});
 
         //creamos el refeshToken
         const refreshToken = jwt.sign(payload, 
