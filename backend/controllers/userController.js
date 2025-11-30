@@ -110,9 +110,17 @@ export const refreshToken = async (req, res) =>{
         if(!user){
             return res.status(403).json({ message: "Invalid refresh token" });
         }
+        try{
+            const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+        }catch (err) {
+            // Si el refresh token expiró o es inválido, lo eliminamos por seguridad
+            user.refreshToken = null;
+            await user.save();
+            return res.status(403).json({ message: "Expired or invalid refresh token" });
+        }
+        
 
-        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-
+        const payload = { id: user._id, email: user.email };
         const newAccessToken = jwt.sign(
             payload,
             process.env.JWT_REFRESH_SECRET,
@@ -128,10 +136,10 @@ export const refreshToken = async (req, res) =>{
 export const logout = async (req, res) =>{
     try{
         //sacar token del header (si existe)
-        const authHeader = req.headers.authorization
+        const authHeader = req.headers.authorization;
 
         //si no existe el token no falla el sistema sino que le invalidamos el refreshToken y al no tener accessToken se obliga a logearse
-        const token = authHeader && authHeader.startsWhith("Bearer ")
+        const token = authHeader && authHeader.startsWith("Bearer ")
         ? authHeader.split(" ")[1]
         : null;
 

@@ -1,7 +1,7 @@
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 
 const blacklistedTokenSchema = new mongoose.Schema({
-    token: {Types: String, required: true},
+    token: {type: String, required: true},
     expiresAt: {type: Date, required: true}//guardamos la fecha de expiro del token para que cuando pase ese tiepo mongo lo borre
 })
 
