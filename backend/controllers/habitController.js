@@ -14,7 +14,7 @@ export const createHabit = async (req, res) => {
             startdate: Date.now(),
             startdatestreak: Date.now(),
             asset: true,
-            user: userId
+            userId: userId
         })
         await newHabit.save();
         res.status(201).json({ habit: newHabit, message: "Habit created successfully" });
@@ -28,7 +28,7 @@ export const getHabitsWithStreak = async (req, res) => {
     try{
         //tremos del req el id del usuario para buscar solo los habitos de ese usaurio
         const userId = req.user._id
-        const habits = await Habit.find({user: userId});
+        const habits = await Habit.find({userId});
         
         //calculo de la racha actual ya que esta no se guarda en la base de datos sino que se calcula al momento de pedir los habitos
         const habitsWithStreak = habits.map(habit => {
@@ -59,9 +59,9 @@ export const getHabitsWithStreak = async (req, res) => {
 
 export const getHabitwithStreakById = async (req, res) => {
     try{
-        const {id} = req.params;
-        const userId = req.user._id;
-        const habit = await Habit.findById({_id: id, user: userId});
+        const {id} = req.params;// id del habito
+        const userId = req.user._id;//id del usaurio logeado
+        const habit = await Habit.findOne({_id: id, userId});
         if(!habit){
             return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
         }
@@ -88,7 +88,7 @@ export const getBestStreak = async (req, res) => {
         const {id} = req.params;
         const userId = req.user.id;
 
-        const habit = await Habit.findById({ _id: id, user: userId });
+        const habit = await Habit.findOne({ _id: id, userId });
         if(!habit){
             return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
         }
@@ -114,7 +114,7 @@ export const lostStreak = async (req, res) => {
         const {id} = req.params;
         const userId = req.user.id;
 
-        const habit = await Habit.findById({ _id: id, user: userId });
+        const habit = await Habit.findOne({ _id: id, userId });
         if(!habit){
             return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
         }
