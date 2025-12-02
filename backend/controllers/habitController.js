@@ -5,6 +5,7 @@ import Habit from '../models/habitModel.js';
 export const createHabit = async (req, res) => {
     try{
         const {name, description, daysTarget} = req.body;
+        const userId = req.user._id;
 
         const newHabit = new Habit({
             name,
@@ -12,7 +13,8 @@ export const createHabit = async (req, res) => {
             daysTarget,
             startdate: Date.now(),
             startdatestreak: Date.now(),
-            asset: true
+            asset: true,
+            user: userId
         })
         await newHabit.save();
         res.status(201).json({ habit: newHabit, message: "Habit created successfully" });
@@ -24,7 +26,9 @@ export const createHabit = async (req, res) => {
 
 export const getHabitsWithStreak = async (req, res) => {
     try{
-        const habits = await Habit.find();
+        //tremos del req el id del usuario para buscar solo los habitos de ese usaurio
+        const userId = req.user._id
+        const habits = await Habit.find({user: userId});
         
         //calculo de la racha actual ya que esta no se guarda en la base de datos sino que se calcula al momento de pedir los habitos
         const habitsWithStreak = habits.map(habit => {
@@ -56,7 +60,8 @@ export const getHabitsWithStreak = async (req, res) => {
 export const getHabitwithStreakById = async (req, res) => {
     try{
         const {id} = req.params;
-        const habit = await Habit.findById(id);
+        const userId = req.user._id;
+        const habit = await Habit.findById({_id: id, user: userId});
         if(!habit){
             return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
         }
@@ -81,7 +86,9 @@ export const getHabitwithStreakById = async (req, res) => {
 export const getBestStreak = async (req, res) => {
     try{
         const {id} = req.params;
-        const habit = await Habit.findById(id);
+        const userId = req.user.id;
+
+        const habit = await Habit.findById({ _id: id, user: userId });
         if(!habit){
             return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
         }
@@ -105,7 +112,9 @@ export const getBestStreak = async (req, res) => {
 export const lostStreak = async (req, res) => {
     try{
         const {id} = req.params;
-        const habit = await Habit.findById(id);
+        const userId = req.user.id;
+
+        const habit = await Habit.findById({ _id: id, user: userId });
         if(!habit){
             return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
         }
