@@ -7,6 +7,26 @@ export const createHabit = async (req, res) => {
         const {name, description, daysTarget} = req.body;
         const userId = req.user._id;
 
+         if (!name || typeof name !== "string" || name.trim().length < 2) {
+            return res.status(400).json({ error: "Name must have at least 2 characters" });
+        }
+        if (name.length > 40) {
+            return res.status(400).json({ error: "Name is too long (max 40 chars)" });
+        }
+
+        // Validación de description
+        if (description && description.length > 300) {
+            return res.status(400).json({ error: "Description too long (max 300 chars)" });
+        }
+
+        // Validación daysTarget
+        if (daysTarget === undefined || daysTarget === null) {
+            return res.status(400).json({ error: "daysTarget is required" });
+        }
+        if (typeof daysTarget !== "number" || !Number.isInteger(daysTarget) || daysTarget <= 0) {
+            return res.status(400).json({ error: "daysTarget must be a positive integer" });
+        }
+
         const newHabit = new Habit({
             name,
             description,
@@ -60,6 +80,10 @@ export const getHabitsWithStreak = async (req, res) => {
 export const getHabitwithStreakById = async (req, res) => {
     try{
         const {id} = req.params;// id del habito
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: "Invalid habit ID" });
+        }
+
         const userId = req.user._id;//id del usaurio logeado
         const habit = await Habit.findOne({_id: id, userId});
         if(!habit){
@@ -86,6 +110,10 @@ export const getHabitwithStreakById = async (req, res) => {
 export const getBestStreak = async (req, res) => {
     try{
         const {id} = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: "Invalid habit ID" });
+        }
         const userId = req.user.id;
 
         const habit = await Habit.findOne({ _id: id, userId });
@@ -112,6 +140,10 @@ export const getBestStreak = async (req, res) => {
 export const lostStreak = async (req, res) => {
     try{
         const {id} = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: "Invalid habit ID" });
+        }
         const userId = req.user.id;
 
         const habit = await Habit.findOne({ _id: id, userId });
@@ -139,6 +171,10 @@ export const lostStreak = async (req, res) => {
 export const deleteHabit = async (req, res) => {
     try{
         const {id} = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: "Invalid habit ID" });
+        }
         const habit = await Habit.findByIdAndDelete(id);
         if(!habit){
             return res.status(404).json({ message: "Habit not found", error: "Habit not found" });
