@@ -62,8 +62,17 @@ export const userRegister = async (req, res) => {
 }
 
 export const userLogin = async (req, res) =>{
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     try{
         const {email, password} = req.body;
+
+        if (!email || typeof email !== "string" || !emailRegex.test(email.trim())) {
+            return res.status(400).json({ error: "Invalid email format" });
+        }
+
+        if (!password || typeof password !== "string" || password.trim().length < 1) {
+            return res.status(400).json({ error: "Password is required" });
+        }
 
         const existUser = await User.findOne({email});
         if(!existUser){
@@ -112,8 +121,12 @@ export const userLogin = async (req, res) =>{
 export const refreshToken = async (req, res) =>{
     try{
         const {refreshToken} = req.body;
-        if(!refreshToken){
-            return res.status(401).json({ message: "Refresh token required" })
+
+        if (!refreshToken || typeof refreshToken !== "string") {
+            return res.status(400).json({ error: "refreshToken is required" });
+        }
+        if (refreshToken.trim().length < 10) {
+            return res.status(400).json({ error: "Invalid refreshToken format" });
         }
 
         //con esto nos aseguramos que pertenece a un usuario y que no fue borrado por logout
@@ -181,6 +194,10 @@ export const logout = async (req, res) =>{
 
         //invalidamos el refreshToken
         const {refreshToken} = req.body;
+        if (!refreshToken || typeof refreshToken !== "string") {
+            return res.status(400).json({ error: "refreshToken is required." });
+        }
+
         if(refreshToken){
             const user = await User.findOne({refreshToken});
             if(user){
