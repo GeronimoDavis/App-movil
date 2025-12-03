@@ -2,6 +2,7 @@ import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 import blackListedToken from "../models/blackListedToken.js";
+import user from "../models/user.js";
 
 
 export const userRegister = async (req, res) => {
@@ -10,12 +11,24 @@ export const userRegister = async (req, res) => {
     try{
         const {userName, email, password} = req.body;
 
-        if(!userName || !email || !password){
-            return res.status(400).json({ message: "All fields are required.", error: "All fields are required." });
+        if(!userName || typeof userName !== "string" ||userName.trim().length < 3){
+            return res.status(400).json({error: "userName must have at least 3 characters"})
         }
 
-        if(!regex.test(email)){
+        if(userName.trim().length > 30){
+            return res.status(400).json({ error: "userName is too long (max 30 characters)." });
+        }
+       
+        if(!email || !regex.test(email)){
             res.status(400).json({ message: "invalid email" })
+        }
+
+        if(!password || typeof password !== "string", password.trim().length < 6){
+            return res.status(400).json({error: "Password must have at least 6 characters"})
+        }
+
+        if(password.length > 50){
+            return res.status(400).json({ error: "Password is too long (max 50 characters)" });
         }
 
         //verifico si existe el email

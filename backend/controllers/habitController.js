@@ -7,7 +7,7 @@ export const createHabit = async (req, res) => {
         const {name, description, daysTarget} = req.body;
         const userId = req.user._id;
 
-         if (!name || typeof name !== "string" || name.trim().length < 2) {
+         if (!name || typeof name !== "string" || name.trim().length < 2) {//name.trim().length < 2 controla que existan letras y no espacios en blanco
             return res.status(400).json({ error: "Name must have at least 2 characters" });
         }
         if (name.length > 40) {
