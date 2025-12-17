@@ -13,13 +13,16 @@ const app = express();//instancia de express
 app.use(express.json());//para parsear el body de las solicitudes como json
 
 app.use(cors({
-    origin: "http://localhost:5173",//frontend permitido
+    origin: true,//frontend permitido
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
     optionsSuccessStatus: 200
 }));//habilitar cors para permitir solicitudes desde otros dominios
 
+app.get("/api/health", (req, res) => {
+  res.json({ message: "Backend activo" });
+});
 
 app.use('/api/habits', habitRoutes);//definimos la ruta base para las rutas de habitos
 app.use("/api/user", userRouter);
@@ -29,7 +32,7 @@ const PORT = process.env.PORT || 5000;//puerto del servidor
 mongoose.connect(process.env.MONGODB_URI)
 .then(() => {
     console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
         console.log(`Server running on port ${PORT}`);
     });
 })
